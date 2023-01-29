@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ESP32-CAM TensorflowJS</title>
+  <style>
+    body {
+      font-family: "PT Sans", sans-serif;
+      background-color: #dde2e1;
+      margin: 0;
+      color: #636060;
+      line-height: 1.6;
+    }
+
+    a {
+      text-decoration: none;
+      color: #ccc;
+    }
+
+    h2 {
+      display: block;
+      font-size: 1.17em;
+      margin-block-start: 1em;
+      margin-block-end: 1em;
+      margin-inline-start: 0px;
+      margin-inline-end: 0px;
+      font-weight: bold;
+    }
+
+    .container {
+      max-width: 1180px;
+      text-align: center;
+      margin: 0 auto;
+      padding: 0 3rem;
+    }
+
+    .btn {
+      padding: 1rem;
+      color: #fff;
+      display: inline-block;
+      background: red;
+      margin-bottom: 1rem;
+    }
+  </style>
+  <div>Esp32-CAM (Tacho inteligente)</div>
+  <button type="button" onclick="init()">Start</button>
+  <div id="webcam-container"></div>
+  <div id="label-container"></div>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.3.1/dist/tf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@0.8/dist/teachablemachine-image.min.js"></script>
+  <script type="text/javascript">
+    // More API functions here:
+    // https://github.com/googlecreativelab/teachablemachine-community/tree/master/libraries/image
+
+    // the link to your model provided by Teachable Machine export panel
+    const URL = "https://teachablemachine.withgoogle.com/models/xX8tYgrSM/";
+
+    let model, webcam, labelContainer, maxPredictions;
+
+    // Load the image model and setup the webcam
+    async function init() {
+      const modelURL = URL + "model.json";
+      const metadataURL = URL + "metadata.json";
+
+      // load the model and metadata
+      // Refer to tmImage.loadFromFiles() in the API to support files from a file picker
+      // or files from your local hard drive
+      // Note: the pose library adds "tmImage" object to your window (window.tmImage)
+      model = await tmImage.load(modelURL, metadataURL);
+      maxPredictions = model.getTotalClasses();
+
+    // Convenience function to setup a webcam
+    const devices = await navigator.mediaDevices.enumerateDevices()
+    console.log(devices)
+    const webcam = new tmImage.Webcam(400, 400, false);
+    await webcam.setup({ deviceId: devices[1].deviceId })
+    await webcam.play();
+    window.requestAnimationFrame(loop);
+
+      // append elements to the DOM
+      document.getElementById("webcam-container").appendChild(webcam.canvas);
+      labelContainer = document.getElementById("label-container");
+      for (let i = 0; i < maxPredictions; i++) { // and class labels
+        labelContainer.appendChild(document.createElement("div"));
+      }
+    }
+
+    async function loop() {
+      webcam.update(); // update the webcam frame
+      await predict();
+      window.requestAnimationFrame(loop);
+    }
+
+    // run the webcam image through the image model
+    async function predict() {
+      // predict can take in an image, video or canvas html element
+      const prediction = await model.predict(webcam.canvas);
+      for (let i = 0; i < maxPredictions; i++) {
+        const classPrediction =
+          prediction[i].className + ": " + prediction[i].probability.toFixed(2);
+        labelContainer.childNodes[i].innerHTML = classPrediction;
+      }
+    }
+  </script>
+
+</head>
+
+<body>
+  <div class="container">
+    <h2>TensorflowJS with ESP32-CAM</h2>
+    <section>
+      <img id="img1" width="320" height="200" src="http://192.168.100.108:81" crossorigin
+        style="border:1px solid red" />
+      <div id="results" />
+    </section>
+    <section>
+      <a href="#" class="btn" onclick="init()">Start Reconocimiento image</a>
+    </section>
+    <section id="i" />
+  </div>
+</body>
+
+</html>
