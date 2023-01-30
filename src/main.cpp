@@ -1,14 +1,6 @@
 #define CAMERA_MODEL_AI_THINKER // Has PSRAM
 #include "camera_pins.h"
 #include "ConexionWifi.h"
-/*
-// Ingrese la contraseña de la cuenta de conexión WIFI
-const char *ssid = "NETLIFE-ALBARADO";       //"NETLIFE-ALBARADO"; //"Microcontroladores"
-const char *password = "severino0985955238"; //"severino0985955238"; //"Raspii123"
-// Ingrese la contraseña de la cuenta de conexión AP
-const char *apssid = "ESP32-ONE";
-const char *appassword = "12345678"; // La contraseña de AP debe tener al menos 8 caracteres o más
-*/
 
 #include "esp_camera.h"
 #include <WiFi.h>
@@ -21,7 +13,6 @@ const char *appassword = "12345678"; // La contraseña de AP debe tener al menos
 
 // https://script.google.com/macros/s/AKfycbxSIXPYVZs3nI1aHPbbJVjCt1An894tXko-YCKpOy1Hazmwnuyq96uhuvqL-OwioLr0Nw/exec
 String myScript = "/macros/s/AKfycbxSIXPYVZs3nI1aHPbbJVjCt1An894tXko-YCKpOy1Hazmwnuyq96uhuvqL-OwioLr0Nw/exec"; // Create your Google Apps Script and replace the "myScript" path.
-String myLineNotifyToken = "myToken=**********";                                                               // Line Notify Token. You can set the value of xxxxxxxxxx empty if you don't want to send picture to Linenotify.
 String myFoldername = "&myFoldername=";                                                                        //"&myFoldername=papeles";
 String myFilename = "&myFilename=";                                                                            //"&myFilename=papeles.jpg";
 String myImage = "&myFile=";                                                                                   //"&myFile=";
@@ -35,6 +26,7 @@ String myImage = "&myFile=";                                                    
 #include <ESP32Servo.h>
 #define AbriP_PIN 14
 #define ClasifM_PIN 15
+
 
 // Instanciamos los dos servos
 Servo abrirServo;
@@ -270,7 +262,7 @@ static const char PROGMEM INDEX_HTML[] = R"rawliteral(<!DOCTYPE html>
                         </div>
                         <div class="input-group">
                           <label for="modelPath">Model Path</label>
-                          <input type="text" id="modelPath" value="https://teachablemachine.withgoogle.com/models/keGx0EHOd/">
+                          <input type="text" id="modelPath" value="https://teachablemachine.withgoogle.com/models/UR5ERZ2gB/">
                         </div>
                         <div class="input-group">
                             <label for="btnModel"></label>
@@ -525,16 +517,6 @@ static const char PROGMEM INDEX_HTML[] = R"rawliteral(<!DOCTYPE html>
 // Página de inicio http://192.168.xxx.xxx
 static esp_err_t index_handler(httpd_req_t *req)
 {
-  /*
-   httpd_resp_set_type(req, "text/html");
-  sensor_t * s = esp_camera_sensor_get();
-    if (s->id.PID == OV2640_PID) {
-        return httpd_resp_send(req, (const char *)INDEX_HTML, strlen(INDEX_HTML));
-    }
-    return httpd_resp_send(req, (const char *)INDEX_HTML, strlen(INDEX_HTML));
-}
-  */
-
   httpd_resp_set_type(req, "text/html");
   return httpd_resp_send(req, (const char *)INDEX_HTML, strlen(INDEX_HTML));
 }
@@ -585,251 +567,6 @@ void getCommand(char c)
       semicolonstate = 1;
   }
 }
-
-// Control de parámetro de comando
-/*
-static esp_err_t cmd_handler(httpd_req_t *req)
-{
-  char *buf; // Acceda a la cadena de parámetros después de la URL
-  size_t buf_len;
-  char variable[128] = {
-      0,
-  }; // Acceder al valor de var del parámetro
-  char value[128] = {
-      0,
-  }; // Acceder al valor del parámetro val
-  String myCmd = "";
-
-  buf_len = httpd_req_get_url_query_len(req) + 1;
-  if (buf_len > 1)
-  {
-    buf = (char *)malloc(buf_len);
-    if (!buf)
-    {
-      httpd_resp_send_500(req);
-      return ESP_FAIL;
-    }
-    if (httpd_req_get_url_query_str(req, buf, buf_len) == ESP_OK)
-    {
-      if (httpd_query_key_value(buf, "var", variable, sizeof(variable)) == ESP_OK &&
-          httpd_query_key_value(buf, "val", value, sizeof(value)) == ESP_OK)
-      {
-      }
-      else
-      {
-        myCmd = String(buf); // Si el formato no oficial no contiene var, val, es un formato de instrucción personalizado
-      }
-    }
-    free(buf);
-  }
-  else
-  {
-    httpd_resp_send_404(req);
-    return ESP_FAIL;
-  }
-
-  Feedback = "";
-  Command = "";
-  cmd = "";
-  P1 = "";
-  P2 = "";
-  P3 = "";
-  P4 = "";
-  P5 = "";
-  P6 = "";
-  P7 = "";
-  P8 = "";
-  P9 = "";
-  ReceiveState = 0, cmdState = 1, strState = 1, questionstate = 0, equalstate = 0, semicolonstate = 0;
-  if (myCmd.length() > 0)
-  {
-    myCmd = "?" + myCmd; // La cadena de parámetros después de que la URL se convierte en un formato de comando personalizado
-    for (int i = 0; i < myCmd.length(); i++)
-    {
-      getCommand(char(myCmd.charAt(i))); // Desensamblar la cadena de parámetros del comando personalizado
-    }
-  }
-
-  if (cmd.length() > 0)
-  {
-    Serial.println("");
-    // Serial.println("Command: "+Command);
-    Serial.println("cmd= " + cmd + " ,P1= " + P1 + " ,P2= " + P2 + " ,P3= " + P3 + " ,P4= " + P4 + " ,P5= " + P5 + " ,P6= " + P6 + " ,P7= " + P7 + " ,P8= " + P8 + " ,P9= " + P9);
-    Serial.println("");
-
-    // Bloque de comando personalizado http://192.168.xxx.xxx/control?cmd=P1;P2;P3;P4;P5;P6;P7;P8;P9
-
-    if (cmd == "ip")
-    { // Consulta APIP, STAIP
-      Feedback = "AP IP: " + WiFi.softAPIP().toString();
-      Feedback += "<br>";
-      Feedback += "STA IP: " + WiFi.localIP().toString();
-    }
-    else if (cmd == "mac")
-    { // Consultar la dirección MAC
-      Feedback = "STA MAC: " + WiFi.macAddress();
-    }
-    else if (cmd == "restart")
-    {
-      ESP.restart();
-    }
-
-#if defined(CAMERA_MODEL_AI_THINKER)
-    else if (cmd == "digitalwrite")
-    {
-      ledcDetachPin(P1.toInt());
-      pinMode(P1.toInt(), OUTPUT);
-      digitalWrite(P1.toInt(), P2.toInt());
-    }
-    else if (cmd == "digitalread")
-    {
-      Feedback = String(digitalRead(P1.toInt()));
-    }
-    else if (cmd == "analogwrite")
-    {
-      if (P1 == "4")
-      {
-        ledcAttachPin(4, 4);
-        ledcSetup(4, 5000, 8);
-        ledcWrite(4, P2.toInt());
-      }
-      else
-      {
-        ledcAttachPin(P1.toInt(), 9);
-        ledcSetup(9, 5000, 8);
-        ledcWrite(9, P2.toInt());
-      }
-    }
-    else if (cmd == "analogread")
-    {
-      Feedback = String(analogRead(P1.toInt()));
-    }
-    else if (cmd == "touchread")
-    {
-      Feedback = String(touchRead(P1.toInt()));
-    }
-#endif
-    else if (cmd == "resetwifi")
-    { // restablecer la conexión de red
-      for (int i = 0; i < 2; i++)
-      {
-        WiFi.begin(P1.c_str(), P2.c_str());
-        Serial.print("Connecting to ");
-        Serial.println(P1);
-        long int StartTime = millis();
-        while (WiFi.status() != WL_CONNECTED)
-        {
-          delay(500);
-          if ((StartTime + 5000) < millis())
-            break;
-        }
-        Serial.println("");
-        Serial.println("STAIP: " + WiFi.localIP().toString());
-        Feedback = "STAIP: " + WiFi.localIP().toString();
-
-        if (WiFi.status() == WL_CONNECTED)
-        {
-          WiFi.softAP((WiFi.localIP().toString() + "_" + P1).c_str(), P2.c_str());
-#if defined(CAMERA_MODEL_AI_THINKER)
-          for (int i = 0; i < 2; i++)
-          { // Si no puede conectarse a WIFI, configure el flash para que parpadee lentamente
-            ledcWrite(4, 10);
-            delay(300);
-            ledcWrite(4, 0);
-            delay(300);
-          }
-#endif
-          break;
-        }
-      }
-    }
-#if defined(CAMERA_MODEL_AI_THINKER)
-    else if (cmd == "flash")
-    { // Controlar el flash incorporado
-      ledcAttachPin(4, 4);
-      ledcSetup(4, 5000, 8);
-      int val = P1.toInt();
-      ledcWrite(4, val);
-    }
-#endif
-    else if (cmd == "serial")
-    {
-      if (P1 != "" & P1 != "stop")
-        Serial.println(P1);
-      if (P2 != "" & P2 != "stop")
-        Serial.println(P2);
-      Serial.println();
-    }
-    else
-    {
-      Feedback = "Command is not defined";
-    }
-
-    if (Feedback == "")
-    {
-      Feedback = Command; // Si no se establecen datos de retorno, devuelva el valor del comando
-    }
-    const char *resp = Feedback.c_str();
-    httpd_resp_set_type(req, "text/html");                       // Establecer el formato de datos de retorno
-    httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*"); // Permitir lectura entre dominios
-    return httpd_resp_send(req, resp, strlen(resp));
-  }
-  else
-  {
-    // Bloque de comandos oficial, también puede personalizar los comandos aquí http://192.168.xxx.xxx/control?var=xxx&val=xxx
-    int val = atoi(value);
-    sensor_t *s = esp_camera_sensor_get();
-    int res = 0;
-
-    if (!strcmp(variable, "framesize"))
-    {
-      if (s->pixformat == PIXFORMAT_JPEG)
-        res = s->set_framesize(s, (framesize_t)val);
-    }
-    else if (!strcmp(variable, "quality"))
-      res = s->set_quality(s, val);
-    else if (!strcmp(variable, "contrast"))
-      res = s->set_contrast(s, val);
-    else if (!strcmp(variable, "brightness"))
-      res = s->set_brightness(s, val);
-    else if (!strcmp(variable, "hmirror"))
-      res = s->set_hmirror(s, val);
-    else if (!strcmp(variable, "vflip"))
-      res = s->set_vflip(s, val);
-#if defined(CAMERA_MODEL_AI_THINKER)
-    else if (!strcmp(variable, "flash"))
-    {
-      ledcAttachPin(4, 4);
-      ledcSetup(4, 5000, 8);
-      ledcWrite(4, val);
-    }
-#endif
-    else
-    {
-      res = -1;
-    }
-
-    if (res)
-    {
-      return httpd_resp_send_500(req);
-    }
-
-    if (buf)
-    {
-      Feedback = String(buf);
-      const char *resp = Feedback.c_str();
-      httpd_resp_set_type(req, "text/html");
-      httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
-      return httpd_resp_send(req, resp, strlen(resp)); // devuelve cadena de parámetro
-    }
-    else
-    {
-      httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
-      return httpd_resp_send(req, NULL, 0);
-    }
-  }
-}
-*/
 
 // Apartado para el drive
 
@@ -907,7 +644,7 @@ String SendCapturedImage(String myFoldername, String myFilename)
       if (i % 3 == 0)
         imageFile += urlencode(String(output));
     }
-    String Data = myLineNotifyToken + myFoldername + myFilename + myImage;
+    String Data =  myFoldername + myFilename + myImage;
 
     client_tcp.println("POST " + myScript + " HTTP/1.1");
     client_tcp.println("Host: " + String(myDomain));
@@ -1029,107 +766,6 @@ static esp_err_t cmd_handler(httpd_req_t *req)
       getCommand(char(myCmd.charAt(i))); // Desensamblar la cadena de parámetros del comando personalizado
     }
   }
-  /*
-  if (cmd.length() > 0)
-  {
-
-    // Bloque de comando personalizado http://192.168.xxx.xxx/control?cmd=P1;P2;P3;P4;P5;P6;P7;P8;P9
-    if (P1 != "Nada" && P2.toDouble() >= 0.50)
-    {
-      delay(1000);
-      lcd.setCursor(0, 0); // Mostrar el resultado del reconocimiento de imagen en la pantalla
-      lcd.print("Image result:   ");
-      // Ubicamos el objeto en su respectiva posicion
-      if ((P1 == "Plastico" && P2.toDouble() >= 0.60) && (mat_pla == 0) && cont == 2)
-      {
-        lcd.setCursor(0, 1);
-        lcd.print(P1 + "                ");
-        Serial.println("Entre a plastico");
-        // abrirServo.write(0);
-        clasifServo.write(70);
-        delay(500);
-        posServo = clasifServo.read(); // Leemos si se ha movido el servo para proceder abrir la tapa
-        if (posServo > 0)
-        {
-          // Abrimos la tapa por 1 sg y medio, y volvemos a cerrarla
-          abrirServo.write(90);
-          delay(1500);
-          abrirServo.write(0);
-        }
-        delay(500);
-        clasifServo.write(0);
-      }
-      else if ((P1 == "Papeles" && P2.toDouble() >= 0.60) && (mat_pap == 0) && cont == 2)
-      {
-        lcd.setCursor(0, 1);
-        lcd.print(P1 + "                ");
-        Serial.println("Entre a papales");
-        clasifServo.write(3);
-        delay(500);
-        posServo = clasifServo.read(); // Leemos si se ha movido el servo para proceder abrir la tapa
-        if (posServo > 0)
-        {
-          // Abrimos la tapa por 1 sg y medio, y volvemos a cerrarla
-          abrirServo.write(90);
-          delay(1500);
-          abrirServo.write(0);
-        }
-        delay(500);
-        clasifServo.write(0);
-        // String myFoldername1 = myFoldername + "papeles";
-        // String myFilename1 = myFilename + "papeles" + ".jpg";
-        // SendCapturedImage(myFoldername1, myFilename1);
-        // delay(2000);
-      }
-      else if ((P1 == "Metal" && P2.toDouble() >= 0.60) && (mat_met == 0) && cont == 2)
-      {
-        lcd.setCursor(0, 1);
-        lcd.print(P1 + "                ");
-        Serial.print("Entre a metal");
-        clasifServo.write(180);
-        delay(500);
-        posServo = clasifServo.read(); // Leemos si se ha movido el servo para proceder abrir la tapa
-        if (posServo > 0)
-        {
-          // Abrimos la tapa por 1 sg y medio, y volvemos a cerrarla
-          abrirServo.write(90);
-          delay(1500);
-          abrirServo.write(0);
-        }
-        delay(500);
-        clasifServo.write(0);
-        // String myFoldername1 = myFoldername + "metales";
-        // String myFilename1 = myFilename + "metales" + ".jpg";
-        // SendCapturedImage(myFoldername1, myFilename1);
-        // delay(2000);
-      }
-
-      lcd.clear();
-
-      mat_pap = !mat_pap;
-      mat_pla = !mat_pla;
-      mat_met = !mat_met;
-      cont += 1;
-      if (cont == 3)
-      {
-        cont = 0;
-      }
-      Serial.println("hay objeto identificado: " + P1 + " " + P2.toDouble() + "cont: " + cont);
-    }
-    else
-    {
-      Serial.println("No hay objeto: " + P1 + " " + P2.toDouble());
-      // Seteamos nuevamente los valores para que continue leyendo los datos
-      lcd.setCursor(0, 0); // Mostrar el resultado del reconocimiento de imagen en la pantalla
-      lcd.print("Objeto no ...");
-      lcd.setCursor(0, 1); // Mostrar el resultado del reconocimiento de imagen en la pantalla
-      lcd.print("Identificado..");
-      mat_pla = 0;
-      mat_pap = 0;
-      mat_met = 0;
-      cont = 0;
-    }
-    */
   if (cmd == "restart")
   {
     ESP.restart();
@@ -1261,8 +897,10 @@ void setup()
   abrirServo.attach(AbriP_PIN);
   clasifServo.attach(ClasifM_PIN);
   // Movemos los dos servos a 0 grados
-  abrirServo.write(0);
   clasifServo.write(0);
+  // Movemos los dos servos a 180 grados
+  abrirServo.write(0);
+
   // Ajustes de configuración de vídeo:  https://github.com/espressif/esp32-camera/blob/master/driver/include/esp_camera.h
   camera_config_t config;
   config.ledc_channel = LEDC_CHANNEL_0;
@@ -1324,13 +962,8 @@ void setup()
 
   ledcWrite(canal, 0);
   startCameraServer();
-  /*
-
-
-  */
 }
 
-String material[3] = {"Papeles", "Plastico", "Metal"};
 void loop()
 {
   if (cmd.length() > 0)
@@ -1433,6 +1066,5 @@ void loop()
       mat_met = 0;
       cont = 0;
     }
-   
   }
 }

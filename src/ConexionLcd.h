@@ -2,8 +2,8 @@
 
 #define lcdColumns 16
 #define lcdRows  2
-#define SDA 12
-#define SCL 13
+#define SDA 12 //azul
+#define SCL 13 //morado
 
 LiquidCrystal_I2C lcd(PCF8574_ADDR_A21_A11_A01, 4, 5, 6, 16, 11, 12, 13, 14, POSITIVE);
 //LiquidCrystal_I2C lcd(0x27, lcdColumns, lcdRows);
